@@ -17,6 +17,18 @@ function generateToken (user) {
   return jwt.sign(payload, secret.jwtSecret, options)
 }
 
+router.get('/', (req, res) => {
+  db.get()
+    .then(users => {
+      res.status(200).json(users);
+      console.log(users)
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ message: 'There was a problem fetching the users.' })
+    });
+});
+
 router.post('/register', (req, res) => {
   let { firstName, lastName, email, username, password } = req.body
   let user = req.body
@@ -32,7 +44,7 @@ router.post('/register', (req, res) => {
     })
     .catch(err => {
       console.log(err)
-      res.status(500).jason({ error: 'oops something happened' })
+      res.status(500).json({ error: 'oops something happened' })
     })
   }
 });
@@ -65,7 +77,7 @@ router.post('/login', (req, res) => {
   }
 })
 
-router.get('/', (req, res) => {
+router.get('/', auth, (req, res) => {
   db.get()
     .then(users => {
       res.status(200).json(users)
@@ -73,7 +85,7 @@ router.get('/', (req, res) => {
     .catch(err => res.send(err))
 })
 
-router.get('/:id', (req, res) => {
+router.get('/:id', auth, (req, res) => {
   const { id } = req.params
   db.getById(id)
   .then(user => {
@@ -94,12 +106,12 @@ router.get('/:id', (req, res) => {
 })
 
 //**** MEALS MODEL ABSTRACT THIS IF TIME*/
-router.get('/:id/meals', (req, res) => {
+router.get('/:id/meals', auth, (req, res) => {
   const { id } = req.params
   db.getMeal(id)
     .then(meals => {
       if(meals.length === 0){
-        res.status(404).json({ message: 'No user here'})
+        res.status(404).json({ message: 'No meals exist for this user.'})
         } else {
           res.status(200).json(meals)
         }
@@ -123,24 +135,40 @@ router.get('/:id/meals/:ids', (req, res) => {
     })
 })
 
+router.post('/:id/meals/:ids', (req, res) => {
+  const { id } = req.params;
+  const { ids } = req.params;
+  const newUser = req.body;
+
+  db.insertUserToMeal(id, ids, newUser)
+    .then(user => {
+      if (user) {
+        console.log(newUser);
+        res.status(200).json(newUser);
+      } else {
+        res.status(404).json({ message: 'This user could not be found.' })
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ message: 'There was a problem adding this user to your bill.' })
+    });
+});
+
 router.post('/:id/meals/',  (req, res) => {
   const { id } = req.params
-  const { restaurant, meal, total, comments } = req.body
+  // const { restaurant, meal, total, comments } = req.body
   const post = req.body
   
-    if(!restaurant || !meal || !total ){
-        res.status(400).json({ message: 'owie incorect meal data'})
-      } else {
-      db.insertMeal(id, post) 
-      .then(meals => {
-      // console.log(meals)    
-      res.status(200).json(meals)     
-      })
-      .catch(err => {
-        console.log(err)
-        res.status(500).json({ error: 'oops something happened'})
+    db.insertMeal(id, post) 
+    .then(meals => {
+      console.log(meals)    
+    res.status(200).json(meals)     
     })
-    }  
+    .catch(err => {
+      console.log(err)
+      res.status(500).json({ error:'oops something happened'}) 
+    })  
 })
 
 router.put('/:id/meals', (req, res) => {
@@ -162,7 +190,6 @@ router.delete('/:id/meals/:ids',  (req, res) => {
   const { ids } = req.params
   db.removeMeal(id, ids)
     .then(meals => {
-      // console.log(meals)
       if(meals === 0){
         res.status(404).json({ message: 'incorrect/ invalid id'})
       } else {

@@ -47,5 +47,19 @@ module.exports = {
       min: 2,
       max: 10
     },
-  }
+  },
+
+  testing: {
+    client: 'sqlite3',
+    useNullAsDefault: true,
+    connection: {
+      filename: './dev.sqlite3'
+    },
+    migrations: {
+      directory: './data/migrations'
+    },
+    seeds: {
+      directory: './data/seeds'
+    }
+  },
 };

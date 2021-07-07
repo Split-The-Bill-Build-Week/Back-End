@@ -64,14 +64,10 @@ function getMealById(id) {
 
 function getMeal(id) {
     return db('user_meals')
-        // .select('*')
-        // .join('users', 'user_meals.user_id', 'users.id')
-        // .select('user_meals.meal_id')
-        // .where('users.id', id)
         .join('meals', 'meals.id', "user_meals.meal_id")
         .where('user_meals.user_id', id) 
         .select('meals.*')
-        // .where('users.id', "user_meals.user_id")       
+   
 }
 
 function getUserMealById(id, ids) {
@@ -83,6 +79,7 @@ function getUserMealById(id, ids) {
         .first()
         .select('*')
 }
+
 // ***********************************************************
 // Needs CLEAN UP*/
 async function insertMeal(id, changes) {
